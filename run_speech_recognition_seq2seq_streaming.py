@@ -408,7 +408,7 @@ def main():
         #     use_auth_token=True)
         raw_datasets["train"] = load_dataset(
               data_args.dataset_name,
-              split=splits,
+              split=data_args.train_split_name,
               use_auth_token=True)
         # raw_datasets["train"] = load_streaming_dataset(
         #     data_args.dataset_name,
@@ -426,7 +426,7 @@ def main():
         # )
         raw_datasets["eval"] = load_dataset(
               data_args.dataset_name,
-              split=splits,
+              split=data_args.eval_split_name,
               use_auth_token=True)
 
     raw_datasets_features = list(next(iter(raw_datasets.values())).features.keys())
