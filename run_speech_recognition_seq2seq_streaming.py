@@ -551,11 +551,11 @@ def main():
             remove_columns=raw_datasets_features,
         ).with_format("torch")
 
-        if training_args.do_train:
-            vectorized_datasets["train"] = vectorized_datasets["train"].shuffle(
-                buffer_size=data_args.shuffle_buffer_size,
-                seed=training_args.seed,
-            )
+#         if training_args.do_train:
+#             vectorized_datasets["train"] = vectorized_datasets["train"].shuffle(
+#                 buffer_size=data_args.shuffle_buffer_size,
+#                 seed=training_args.seed,
+#             )
 
     # filter training data that is shorter than min_input_length or longer than
     # max_input_length
