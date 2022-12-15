@@ -497,11 +497,11 @@ def main():
         tokenizer.set_prefix_tokens(language=data_args.language, task=data_args.task)
 
     # 6. Resample speech dataset if necessary
-    dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
-    if dataset_sampling_rate != feature_extractor.sampling_rate:
-        raw_datasets = raw_datasets.cast_column(
-            data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
-        )
+#     dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
+#     if dataset_sampling_rate != feature_extractor.sampling_rate:
+#         raw_datasets = raw_datasets.cast_column(
+#             data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
+#         )
 
     # 7. Preprocessing the datasets.
     # We need to read the audio files as arrays and tokenize the targets.
