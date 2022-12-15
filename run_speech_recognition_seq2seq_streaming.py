@@ -407,7 +407,7 @@ def main():
         #     text_column_names=text_column_names,
         #     use_auth_token=True)
         raw_datasets["train"] = load_dataset(
-              dataset_names,
+              data_args.dataset_name,
               split=splits,
               use_auth_token=True)
         # raw_datasets["train"] = load_streaming_dataset(
@@ -425,7 +425,7 @@ def main():
         #     use_auth_token=True if model_args.use_auth_token else None,
         # )
         raw_datasets["eval"] = load_dataset(
-              dataset_names,
+              data_args.dataset_name,
               split=splits,
               use_auth_token=True)
 
