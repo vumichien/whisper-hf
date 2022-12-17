@@ -31,6 +31,8 @@ import torch
 from datasets import Audio, interleave_datasets, IterableDataset, load_dataset, IterableDatasetDict
 from torch.utils.data import IterableDataset
 import MeCab
+import pykakasi
+import re
 
 import evaluate
 import transformers
@@ -406,28 +408,28 @@ def main():
         #     dataset_config_names=dataset_config_names,
         #     text_column_names=text_column_names,
         #     use_auth_token=True)
-#         raw_datasets["train"] = load_dataset(
-#               data_args.dataset_name,
-#               split=data_args.train_split_name,
-#               use_auth_token=True)
-        raw_datasets["train"] = load_streaming_dataset(
-            data_args.dataset_name,
-            data_args.dataset_config_name,
-            split=data_args.train_split_name,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
+        raw_datasets["train"] = load_dataset(
+              data_args.dataset_name,
+              split=data_args.train_split_name,
+              use_auth_token=True)
+#         raw_datasets["train"] = load_streaming_dataset(
+#             data_args.dataset_name,
+#             data_args.dataset_config_name,
+#             split=data_args.train_split_name,
+#             use_auth_token=True if model_args.use_auth_token else None,
+#         )
 
     if training_args.do_eval:
-        raw_datasets["eval"] = load_streaming_dataset(
-            data_args.dataset_name,
-            data_args.dataset_config_name,
-            split=data_args.eval_split_name,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
-#         raw_datasets["eval"] = load_dataset(
-#               data_args.dataset_name,
-#               split=data_args.eval_split_name,
-#               use_auth_token=True)
+#         raw_datasets["eval"] = load_streaming_dataset(
+#             data_args.dataset_name,
+#             data_args.dataset_config_name,
+#             split=data_args.eval_split_name,
+#             use_auth_token=True if model_args.use_auth_token else None,
+#         )
+        raw_datasets["eval"] = load_dataset(
+              data_args.dataset_name,
+              split=data_args.eval_split_name,
+              use_auth_token=True)
 
     raw_datasets_features = list(next(iter(raw_datasets.values())).features.keys())
 
@@ -497,11 +499,11 @@ def main():
         tokenizer.set_prefix_tokens(language=data_args.language, task=data_args.task)
 
     # 6. Resample speech dataset if necessary
-    dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
-    if dataset_sampling_rate != feature_extractor.sampling_rate:
-        raw_datasets = raw_datasets.cast_column(
-            data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
-        )
+#     dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
+#     if dataset_sampling_rate != feature_extractor.sampling_rate:
+#         raw_datasets = raw_datasets.cast_column(
+#             data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
+#         )
 
     # 7. Preprocessing the datasets.
     # We need to read the audio files as arrays and tokenize the targets.
@@ -514,6 +516,11 @@ def main():
     do_remove_punctuation = data_args.do_remove_punctuation
     normalizer = BasicTextNormalizer()  # 'official' text normalizer from OpenAI
     wakati = MeCab.Tagger("-Owakati")
+    kakasi = pykakasi.kakasi()
+    kakasi.setMode("J","H")      # kanji to hiragana
+    kakasi.setMode("K","H")      # katakana to hiragana
+    conv = kakasi.getConverter()
+    chars_to_ignore_regex = '[\,\?\.\!\-\;\:\"\“\‘\”\�\‘\、\。\．\！\，\・\―\─\~\｢\｣\『\』\〆\｡\※\[\]\{\}\「\」\〇\？\…\=\+\〜\'\－\･\(\)\/\—\`\’\–]'
     FULLWIDTH_TO_HALFWIDTH = str.maketrans(
     '　０１２３４５６７８９ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ！゛＃＄％＆（）＊＋、ー。／：；〈＝〉？＠［］＾＿‘｛｜｝～',
     ' 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&()*+,-./:;<=>?@[]^_`{|}~',
@@ -528,6 +535,14 @@ def main():
     def fullwidth_to_halfwidth(s):
         s = s.translate(FULLWIDTH_TO_HALFWIDTH)
         return wakati.parse(s)
+    
+    def remove_special_characters(batch):
+        batch["sentence"] = fullwidth_to_halfwidth(batch["sentence"])
+        batch["sentence"] = re.sub(chars_to_ignore_regex,' ', batch["sentence"]).lower()  #remove special char
+        batch["sentence"] = wakati.parse(batch["sentence"])                              #add space
+        batch["sentence"] = conv.do(batch["sentence"])                                   #covert to hiragana
+        batch["target_text"] = " ".join(batch["sentence"].split()) + " "                    #remove multiple space    
+        return batch
 
     def prepare_dataset(batch):
         # process audio
@@ -539,7 +554,8 @@ def main():
 
         # process targets
         input_str = batch[text_column_name].lower() if do_lower_case else batch[text_column_name]
-        input_str = fullwidth_to_halfwidth(input_str)
+#         input_str = fullwidth_to_halfwidth(input_str)
+        input_str = remove_special_characters(input_str)
         if do_remove_punctuation:
             input_str = normalizer(input_str).strip()
         batch["labels"] = tokenizer(input_str).input_ids
