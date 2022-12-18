@@ -536,13 +536,13 @@ def main():
         s = s.translate(FULLWIDTH_TO_HALFWIDTH)
         return wakati.parse(s)
     
-    def remove_special_characters(batch):
-        batch["sentence"] = fullwidth_to_halfwidth(batch["sentence"])
-        batch["sentence"] = re.sub(chars_to_ignore_regex,' ', batch["sentence"]).lower()  #remove special char
-        batch["sentence"] = wakati.parse(batch["sentence"])                              #add space
-        batch["sentence"] = conv.do(batch["sentence"])                                   #covert to hiragana
-        batch["target_text"] = " ".join(batch["sentence"].split()) + " "                    #remove multiple space    
-        return batch
+    def remove_special_characters(s):
+        s = fullwidth_to_halfwidth(s)
+        s = re.sub(chars_to_ignore_regex,' ', s).lower()  #remove special char
+        s = wakati.parse(s)                              #add space
+        s = conv.do(s)                                   #covert to hiragana
+        s = " ".join(s.split()) + " "                    #remove multiple space    
+        return s
 
     def prepare_dataset(batch):
         # process audio
