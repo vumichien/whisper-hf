@@ -1,16 +1,16 @@
 python run_speech_recognition_seq2seq_streaming.py \
 	--model_name_or_path="openai/whisper-medium" \
 	--dataset_name="vumichien/preprocessed_jsut_jsss_css10_common_voice_11" \
-	--dataset_config_name="ja" \
-	--language="japanese" \
+	--dataset_config_name="az" \
+	--language="azerbaijani" \
 	--train_split_name="train" \
 	--eval_split_name="test" \
-	--model_index_name="Whisper Medium Mix Japanese" \
-	--max_steps="10000" \
+	--model_index_name="Whisper Medium Azerbaijani" \
+	--max_steps="5000" \
 	--output_dir="./" \
 	--per_device_train_batch_size="32" \
 	--per_device_eval_batch_size="16" \
-  --gradient_accumulation_steps=1 \
+        --gradient_accumulation_steps=1 \
 	--logging_steps="100" \
 	--learning_rate="1e-5" \
 	--warmup_steps="500" \
