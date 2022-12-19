@@ -405,16 +405,16 @@ def main():
     raw_datasets = IterableDatasetDict()
 
     if training_args.do_train:
-        raw_datasets["train"] = load_multiple_streaming_datasets(
-            dataset_names,
-            splits=splits,
-            dataset_config_names=dataset_config_names,
-            text_column_names=text_column_names,
-            use_auth_token=True)
-#         raw_datasets["train"] = load_dataset(
-#               data_args.dataset_name,
-#               split=data_args.train_split_name,
-#               use_auth_token=True)
+#         raw_datasets["train"] = load_multiple_streaming_datasets(
+#             dataset_names,
+#             splits=splits,
+#             dataset_config_names=dataset_config_names,
+#             text_column_names=text_column_names,
+#             use_auth_token=True)
+        raw_datasets["train"] = load_dataset(
+              data_args.dataset_name,
+              split=data_args.train_split_name,
+              use_auth_token=True)
 #         raw_datasets["train"] = load_streaming_dataset(
 #             data_args.dataset_name,
 #             data_args.dataset_config_name,
@@ -423,16 +423,16 @@ def main():
 #         )
 
     if training_args.do_eval:
-        raw_datasets["eval"] = load_streaming_dataset(
-            data_args.dataset_name,
-            data_args.dataset_config_name,
-            split=data_args.eval_split_name,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
-#         raw_datasets["eval"] = load_dataset(
-#               data_args.dataset_name,
-#               split=data_args.eval_split_name,
-#               use_auth_token=True)
+#         raw_datasets["eval"] = load_streaming_dataset(
+#             data_args.dataset_name,
+#             data_args.dataset_config_name,
+#             split=data_args.eval_split_name,
+#             use_auth_token=True if model_args.use_auth_token else None,
+#         )
+        raw_datasets["eval"] = load_dataset(
+              data_args.dataset_name,
+              split=data_args.eval_split_name,
+              use_auth_token=True)
 
     raw_datasets_features = list(next(iter(raw_datasets.values())).features.keys())
 
@@ -502,11 +502,11 @@ def main():
         tokenizer.set_prefix_tokens(language=data_args.language, task=data_args.task)
 
     # 6. Resample speech dataset if necessary
-    dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
-    if dataset_sampling_rate != feature_extractor.sampling_rate:
-        raw_datasets = raw_datasets.cast_column(
-            data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
-        )
+#     dataset_sampling_rate = next(iter(raw_datasets.values())).features[data_args.audio_column_name].sampling_rate
+#     if dataset_sampling_rate != feature_extractor.sampling_rate:
+#         raw_datasets = raw_datasets.cast_column(
+#             data_args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
+#         )
 
     # 7. Preprocessing the datasets.
     # We need to read the audio files as arrays and tokenize the targets.
@@ -557,7 +557,7 @@ def main():
 
         # process targets
         input_str = batch[text_column_name].lower() if do_lower_case else batch[text_column_name]
-#         input_str = fullwidth_to_halfwidth(input_str)
+        input_str = fullwidth_to_halfwidth(input_str)
 #         input_str = remove_special_characters(input_str)
         if do_remove_punctuation:
             input_str = normalizer(input_str).strip()
@@ -570,11 +570,11 @@ def main():
             remove_columns=raw_datasets_features,
         ).with_format("torch")
 
-        if training_args.do_train:
-            vectorized_datasets["train"] = vectorized_datasets["train"].shuffle(
-                buffer_size=data_args.shuffle_buffer_size,
-                seed=training_args.seed,
-            )
+#         if training_args.do_train:
+#             vectorized_datasets["train"] = vectorized_datasets["train"].shuffle(
+#                 buffer_size=data_args.shuffle_buffer_size,
+#                 seed=training_args.seed,
+#             )
 
     # filter training data that is shorter than min_input_length or longer than
     # max_input_length
