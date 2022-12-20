@@ -99,31 +99,32 @@ def main(args):
     cer = round(100 * cer, 2)
     print("CER:", cer)
     
-    evaluate.push_to_hub(
-        model_id=args.model_id,
-        metric_value=wer,
-        metric_type="wer",
-        metric_name="WER",
-        dataset_name=args.dataset,
-        dataset_type=args.dataset,
-        dataset_split=args.split,
-        dataset_config=args.config,
-        task_type="automatic-speech-recognition",
-        task_name="Automatic Speech Recognition"
-    )
+    if args.push_to_hub:
+        evaluate.push_to_hub(
+            model_id=args.model_id,
+            metric_value=wer,
+            metric_type="wer",
+            metric_name="WER",
+            dataset_name=args.dataset,
+            dataset_type=args.dataset,
+            dataset_split=args.split,
+            dataset_config=args.config,
+            task_type="automatic-speech-recognition",
+            task_name="Automatic Speech Recognition"
+        )
 
-    evaluate.push_to_hub(
-        model_id=args.model_id,
-        metric_value=wer,
-        metric_type="cer",
-        metric_name="CER",
-        dataset_name=args.dataset,
-        dataset_type=args.dataset,
-        dataset_split=args.split,
-        dataset_config=args.config,
-        task_type="automatic-speech-recognition",
-        task_name="Automatic Speech Recognition"
-    )
+        evaluate.push_to_hub(
+            model_id=args.model_id,
+            metric_value=cer,
+            metric_type="cer",
+            metric_name="CER",
+            dataset_name=args.dataset,
+            dataset_type=args.dataset,
+            dataset_split=args.split,
+            dataset_config=args.config,
+            task_type="automatic-speech-recognition",
+            task_name="Automatic Speech Recognition"
+        )
 
 
 if __name__ == "__main__":
@@ -176,6 +177,12 @@ if __name__ == "__main__":
         type=bool,
         default=True,
         help="Choose whether you'd like to download the entire dataset or stream it during the evaluation.",
+    )
+    parser.add_argument(
+        "--push_to_hub",
+        type=bool,
+        default=True,
+        help="Choose whether you'd like to push the evaluation results.",
     )
     parser.add_argument(
         "--language",
